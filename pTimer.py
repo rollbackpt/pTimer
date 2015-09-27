@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# Unity indicator for a pomodoro timer
+# Author: João Ribeiro
+# Year: 2015
 
 # TODO: Implement options menu for selecting work and break time
 # TODO: Add "Auto Start" to options to change automatically between states when it finishes
