@@ -33,7 +33,7 @@ class PomodoroTimer:
         self.notification_by_state = {1: 'Your work time is over. You should take a break!',
                                       3: 'Your break is over. Ready to get back to work?'}
 
-        self.icons_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons/')
+        self.icons_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'icons/')
 
         # Create the Indicator instance
         self.ind = appindicator.Indicator.new_with_path(
@@ -90,7 +90,7 @@ class PomodoroTimer:
         else:
             notification = notify.Notification.new("pTimer", self.notification_by_state[self.state], "")
             notification.show()
-            popen("canberra-gtk-play --file=" + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sounds/complete.oga') + " > /dev/null 2>&1 || true")
+            popen("canberra-gtk-play --file=" + os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sounds/complete.oga') + " > /dev/null 2>&1 || true")
             self.stop_counting()
         return True
 
