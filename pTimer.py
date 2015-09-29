@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Unity indicator for a pomodoro timer
-# Author: João Ribeiro
+# Author: Joao Ribeiro
 # Year: 2015
 
 # TODO: Implement options menu for selecting work and break time
@@ -10,6 +10,7 @@
 import time
 import signal
 import os
+from os import popen
 from collections import OrderedDict as dict
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
@@ -89,6 +90,7 @@ class PomodoroTimer:
         else:
             notification = notify.Notification.new("pTimer", self.notification_by_state[self.state], "")
             notification.show()
+            popen("canberra-gtk-play --file=" + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sounds/complete.oga') + " > /dev/null 2>&1 || true")
             self.stop_counting()
         return True
 
