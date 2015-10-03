@@ -10,6 +10,7 @@
 import time
 import signal
 import os
+import json
 from os import popen
 from collections import OrderedDict as dict
 from gi.repository import Gtk as gtk
@@ -21,13 +22,11 @@ from gi.repository import GLib as glib
 class PomodoroTimer:
     def __init__(self):
         # Create variables
-        self.default_work_value = 2400
-        self.default_break_value = 300
-        self.timer_value = self.default_work_value
-        self.counter_timeout_id = 0
         # See how to define this in a better way
         # (But for now 0 - ReadyToWork, 1 - Working, 2 - ReadyToBreak, 3 - InBreak)
         self.state = 0
+        self.read_options_file()
+        self.counter_timeout_id = 0
         # Define icons and notifications by state
         self.icon_by_state = {0: 'work_gray', 1: 'work_red', 2: 'break_gray', 3: 'break_green'}
         self.notification_by_state = {1: 'Your work time is over. You should take a break!',
@@ -50,6 +49,23 @@ class PomodoroTimer:
         # Init menu class
         self.menu = PMenu(self)
 
+    def read_options_file(self):
+        try:
+            with open('options/options.json') as data_file:
+                data = json.load(data_file)
+
+            self.work_value = int(data["timer"]["work"]) * 60
+            self.break_value = int(data["timer"]["break"]) * 60
+        except ValueError:
+            # In case of any error with the file fall back to the default values
+            self.work_value = 40 * 60
+            self.break_value = 5 * 60
+
+        if self.state == 0:
+            self.timer_value = self.work_value
+        elif self.state == 2:
+            self.timer_value = self.break_value
+
     def main(self):
         self.menu.generate()
         gtk.main()
@@ -68,10 +84,10 @@ class PomodoroTimer:
         glib.source_remove(self.counter_timeout_id)
         if self.state == 1:
             self.state = 2
-            self.timer_value = self.default_break_value
+            self.timer_value = self.break_value
         if self.state == 3:
             self.state = 0
-            self.timer_value = self.default_work_value
+            self.timer_value = self.work_value
         self.update_visuals()
         self.menu.reload()
 
@@ -90,7 +106,9 @@ class PomodoroTimer:
         else:
             notification = notify.Notification.new("pTimer", self.notification_by_state[self.state], "")
             notification.show()
-            popen("canberra-gtk-play --file=" + os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sounds/complete.oga') + " > /dev/null 2>&1 || true")
+            popen("canberra-gtk-play --file=" +
+                  os.path.join(os.path.dirname(os.path.realpath(__file__)), 'sounds/complete.oga') +
+                  " > /dev/null 2>&1 || true")
             self.stop_counting()
         return True
 
@@ -103,6 +121,9 @@ class PomodoroTimer:
     def update_visuals(self):
         self.ind.set_label(self.get_time_string(), '00:00:00')
         self.ind.set_icon(self.icon_by_state[self.state])
+
+    def options(self, widget):
+        self.options = pOptions(self)
 
     @staticmethod
     def quit(widget=None):
@@ -117,13 +138,23 @@ class PMenu:
     def generate(self):
         # Check if there are something close to switch in python
         if self.timer.state == 0:
-            menu_items = dict([('Start Working', 'start_counting'), ('Exit', 'quit')])
+            menu_items = dict([('Start Working', 'start_counting'),
+                               ('Options', 'options'),
+                               ('Exit', 'quit')])
         elif self.timer.state == 1:
-            menu_items = dict([('Pause', 'pause_counting'), ('Stop Working', 'stop_counting'), ('Exit', 'quit')])
+            menu_items = dict([('Pause', 'pause_counting'),
+                               ('Stop Working', 'stop_counting'),
+                               ('Options', 'options'),
+                               ('Exit', 'quit')])
         elif self.timer.state == 2:
-            menu_items = dict([('Start Break', 'start_counting'), ('Exit', 'quit')])
+            menu_items = dict([('Start Break', 'start_counting'),
+                               ('Options', 'options'),
+                               ('Exit', 'quit')])
         elif self.timer.state == 3:
-            menu_items = dict([('Pause', 'pause_counting'), ('Stop Break', 'stop_counting'), ('Exit', 'quit')])
+            menu_items = dict([('Pause', 'pause_counting'),
+                               ('Stop Break', 'stop_counting'),
+                               ('Options', 'options'),
+                               ('Exit', 'quit')])
 
         for key, value in menu_items.iteritems():
             item = gtk.MenuItem()
@@ -138,6 +169,61 @@ class PMenu:
         for i in self.menu.get_children():
             self.menu.remove(i)
         self.generate()
+
+
+class pOptions:
+    def __init__(self, timer):
+        self.timer = timer
+
+        self.window = gtk.Window()
+        self.window.set_position(gtk.WindowPosition.CENTER)
+        self.window.set_title("Options")
+        self.window.set_size_request(180,120)
+
+        label1 = gtk.Label("Work Time:")
+        label2 = gtk.Label("Break Time:")
+        self.text1 = gtk.Entry()
+        self.text1.set_max_length(4)
+        self.text1.set_text(str(self.timer.work_value / 60))
+        self.text2 = gtk.Entry()
+        self.text2.set_max_length(4)
+        self.text2.set_text(str(self.timer.break_value / 60))
+
+        button_save = gtk.Button("Save")
+        button_save.set_size_request(150, 10)
+        button_save.connect("clicked", self.save)
+
+        fixed = gtk.Fixed()
+        fixed.put(label1, 15, 10)
+        fixed.put(label2, 15, 45)
+        fixed.put(self.text1, 105, 6)
+        fixed.put(self.text2, 105, 41)
+        fixed.put(button_save, 15, 80)
+        self.window.add(fixed)
+
+        self.window.show_all()
+
+    def save(self, widget, data=None):
+        if self.text1.get_text().isdigit() and self.text2.get_text().isdigit():
+            with open("options/options.json", "w") as outfile:
+                json.dump({"timer": {"work": self.text1.get_text(), "break": self.text2.get_text()}},
+                          outfile,
+                          indent=4)
+            ''' Read file to reload values and close the window '''
+            self.timer.read_options_file()
+            self.timer.update_visuals()
+            self.window.destroy()
+        else:
+            self.error_message()
+
+    def error_message(self):
+        md = gtk.MessageDialog(self.window,
+                               gtk.DialogFlags.MODAL,
+                               gtk.MessageType.ERROR,
+                               gtk.ButtonsType.CLOSE, "Insert valid values for the work and break time in minutes.")
+        md.run()
+        md.destroy()
+
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal.SIG_DFL)
