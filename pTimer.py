@@ -3,8 +3,8 @@
 # Author: Joao Ribeiro
 # Year: 2015
 
-# TODO: Implement options menu for selecting work and break time
-# TODO: Add "Auto Start" to options to change automatically between states when it finishes
+# TODO: Prevent multiple instances to run
+# TODO: Add "Auto Start" to options to change automatically between states when it finishes and improve UI
 # TODO: Refactor the code and finish commenting
 
 import time
@@ -51,7 +51,7 @@ class PomodoroTimer:
 
     def read_options_file(self):
         try:
-            with open('options/options.json') as data_file:
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "options/options.json")) as data_file:
                 data = json.load(data_file)
 
             self.work_value = int(data["timer"]["work"]) * 60
@@ -205,7 +205,7 @@ class pOptions:
 
     def save(self, widget, data=None):
         if self.text1.get_text().isdigit() and self.text2.get_text().isdigit():
-            with open("options/options.json", "w") as outfile:
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "options/options.json"), "w") as outfile:
                 json.dump({"timer": {"work": self.text1.get_text(), "break": self.text2.get_text()}},
                           outfile,
                           indent=4)

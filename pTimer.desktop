@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=0.1
+Name=pTimer
+Comment=Pomodoro timer unity applet
+Exec=/opt/pTimer/pTimer.py
+Path=/opt/pTimer/
+Icon=/opt/pTimer/icons/pTimer_icon_64.png
+Terminal=false
+Type=Application
+Categories=Utility;Application;
