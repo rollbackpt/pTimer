@@ -25,6 +25,9 @@ class PomodoroTimer:
         # See how to define this in a better way
         # (But for now 0 - ReadyToWork, 1 - Working, 2 - ReadyToBreak, 3 - InBreak)
         self.state = 0
+        self.work_value = 0
+        self.break_value = 0
+        self.timer_value = 0
         self.read_options_file()
         self.counter_timeout_id = 0
         # Define icons and notifications by state
@@ -48,6 +51,7 @@ class PomodoroTimer:
 
         # Init menu class
         self.menu = PMenu(self)
+        self.options_window = None
 
     def read_options_file(self):
         try:
@@ -99,6 +103,9 @@ class PomodoroTimer:
             self.counter_timeout_id = glib.timeout_add(1000, self.count_down)
             widget.set_label('Pause')
 
+    def options(self, widget):
+        self.options_window = POptions(self)
+
     def count_down(self):
         self.timer_value -= 1
         if self.timer_value > 0:
@@ -121,9 +128,6 @@ class PomodoroTimer:
     def update_visuals(self):
         self.ind.set_label(self.get_time_string(), '00:00:00')
         self.ind.set_icon(self.icon_by_state[self.state])
-
-    def options(self, widget):
-        self.options = pOptions(self)
 
     @staticmethod
     def quit(widget=None):
@@ -171,14 +175,14 @@ class PMenu:
         self.generate()
 
 
-class pOptions:
+class POptions:
     def __init__(self, timer):
         self.timer = timer
 
         self.window = gtk.Window()
         self.window.set_position(gtk.WindowPosition.CENTER)
         self.window.set_title("Options")
-        self.window.set_size_request(180,120)
+        self.window.set_size_request(280, 120)
 
         label1 = gtk.Label("Work Time:")
         label2 = gtk.Label("Break Time:")
@@ -190,7 +194,7 @@ class pOptions:
         self.text2.set_text(str(self.timer.break_value / 60))
 
         button_save = gtk.Button("Save")
-        button_save.set_size_request(150, 10)
+        button_save.set_size_request(252, 10)
         button_save.connect("clicked", self.save)
 
         fixed = gtk.Fixed()
