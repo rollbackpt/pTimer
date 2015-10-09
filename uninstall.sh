@@ -1,2 +1,2 @@
 #!/bin/sh
-sudo rm -rf /opt/pTimer /usr/bin/pTimer /usr/share/applications/pTimer.desktop
+sudo rm -rf /usr/share/ptimer /usr/bin/ptimer /usr/share/applications/ptimer.desktop
