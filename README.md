@@ -10,5 +10,5 @@ wget -O pTimer.zip https://github.com/rollbackpt/pTimer/archive/master.zip
 unzip pTimer.zip && cd pTimer-master/
 ./install.sh
 # Now run it from everywhere just by typing
-pTimer
+ptimer
 ```
