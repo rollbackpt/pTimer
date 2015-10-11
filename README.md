@@ -18,3 +18,7 @@ unzip pTimer.zip && cd pTimer-master/
 ptimer
 ```
 
+## About the author
+   - Email: joaopedrocr@gmail.com
+   - Blog: http://joaoperibeiro.com
+   - Personal Page: http://joaopcribeiro.branded.me
